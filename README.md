@@ -1,6 +1,6 @@
 
 # Installation
- - Install moviepy, numpy and librosa using pip
+ - Install moviepy, numpy and librosa using `pip install -r requirements.txt`(windows) or `pip3 install -r requirements.txt` (linux/mac)
 
 # Instructions 
  - Paste your images on the images folder (number them alphabetically for the order)
