@@ -1,6 +1,6 @@
 
 # Installation
- - Install moviepy and librosa using pip
+ - Install moviepy, numpy and librosa using pip
 
 # Instructions 
  - Paste your images on the images folder (number them alphabetically for the order)
