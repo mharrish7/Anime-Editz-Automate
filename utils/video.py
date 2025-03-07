@@ -1,5 +1,7 @@
 from moviepy import *
 import os
+import time
+import threading
 
 baseLayer = ColorClip((1080,1920), color=(0,0,0))
 
@@ -19,11 +21,11 @@ def zoom_out_cubic_ease_in(t, duration=0.3, slow_zoom_duration=1.0, slow_zoom_am
    
     if t <= duration:
         t_normalized = min(t / duration, 2)
-        return 2.5 - (t_normalized**3) * 0.3
+        return 1.5 - (t_normalized**3) * 0.3
     else:
         slow_t = t - duration
         slow_t_normalized = slow_t / slow_zoom_duration
-        return 2.5 - 0.3 + slow_t_normalized * slow_zoom_amount 
+        return 1.5 - 0.3 + slow_t_normalized * slow_zoom_amount 
 
 
 def zoom_in_image(t):
@@ -32,7 +34,7 @@ def zoom_in_image(t):
 def zoom_out_image(t):
     return 1.5 - t*0.1
 
-def create_video_with_beat_transitions(image_folder, beat_file, audio_file, output_video="output.mp4", transition_duration=0.2):
+def create_video_with_beat_transitions(image_folder, beat_file, audio_file, output_video="output.mp4", transition_duration=0.2, progress_var=None, window=None):
     global baseLayer
     try:
         # Load images
@@ -59,22 +61,28 @@ def create_video_with_beat_transitions(image_folder, beat_file, audio_file, outp
         last_beat = 0
         image_index = 0
 
+        def progress_callback(count, total):
+            if progress_var and window:
+                progress_var.set(count / total * 100)
+                window.update_idletasks()
+
         for beat in beat_times:
             if image_index >= len(images):
                 break 
             if image_index == len(images)-1:
-                current_image = images[image_index].with_duration(beat - last_beat + 3)
+                current_image = images[image_index].with_duration(beat - last_beat + 2)
             else:
                 current_image = images[image_index].with_duration(beat - last_beat)
 
-
-
-            # if(image_index%2 == 0):
-            #     current_image = current_image.with_effects(
-            #     [vfx.Resize(zoom_in_cubic_ease_out)])
-            # else:
-            #     current_image = current_image.with_effects(
-            #     [vfx.Resize(zoom_out_cubic_ease_in)])
+            if image_index == len(images)-1:
+                current_image = current_image.with_effects(
+                [vfx.Resize(zoom_in_cubic_ease_out), vfx.FadeOut(1)])
+            elif(image_index%2 == 0):
+                current_image = current_image.with_effects(
+                [vfx.Resize(zoom_in_cubic_ease_out)])
+            else:
+                current_image = current_image.with_effects(
+                [vfx.Resize(zoom_out_cubic_ease_in)])
 
 
 
@@ -91,7 +99,7 @@ def create_video_with_beat_transitions(image_folder, beat_file, audio_file, outp
 
         final_clip = concatenate_videoclips(clips)
 
-        audio_clip = audio_clip.with_duration(final_clip.duration + 3)
+        audio_clip = audio_clip.with_duration(final_clip.duration + 2)
         final_clip = final_clip.with_audio(audio_clip)
 
         final_clip.write_videofile(output_video, fps=24)
@@ -103,7 +111,5 @@ def create_video_with_beat_transitions(image_folder, beat_file, audio_file, outp
 
 image_folder = "images"
 beat_file = "beats.txt"
-audio_file = "audio2.mp3"
 output_video = "output_with_audio_new2.mp4"
 
-create_video_with_beat_transitions(image_folder, beat_file, audio_file, output_video)

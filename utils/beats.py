@@ -2,7 +2,7 @@ import librosa
 import numpy as np
 import soundfile as sf 
 
-def find_high_decibel_beats(audio_file, threshold_percentage=0.7):
+def find_high_decibel_beats(audio_file, threshold_percentage=0.9):
     try:
         y, sr = librosa.load(audio_file)
         onset_env = librosa.onset.onset_strength(y=y, sr=sr)
@@ -10,19 +10,20 @@ def find_high_decibel_beats(audio_file, threshold_percentage=0.7):
         times = librosa.frames_to_time(peaks)
         db = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
         beat_dbs = []
-
+        i = 0
         for time in times:
             frame = librosa.time_to_frames(time, sr=sr)
             start_frame = max(0, frame - 2)
             end_frame = min(db.shape[1], frame + 3)
             beat_db = np.mean(db[:, start_frame:end_frame])
             beat_dbs.append(beat_db)
+            with open('progress.txt','w') as f:
+                f.write(f'{i},{len(times)}')
+            i += 1
 
         min_db = np.min(beat_dbs)
         max_db = np.max(beat_dbs)
-        print(f"Beat decibels: {beat_dbs}")
         threshold_db = min_db + (max_db - min_db) * threshold_percentage
-        print(f"Threshold dB: {threshold_db}")
         high_db_beats = [time for i, time in enumerate(times) if beat_dbs[i] >= threshold_db]
 
         return high_db_beats, y, sr
@@ -31,8 +32,8 @@ def find_high_decibel_beats(audio_file, threshold_percentage=0.7):
         print(f"Error processing audio: {e}")
         return [], None, None
 
-def extract_and_save_high_beats(audio_file, output_file="high_beats.wav", time_file="beats.txt"): #added time_file
-    high_beats, y, sr = find_high_decibel_beats(audio_file)
+def extract_and_save_high_beats(audio_file,threshold, output_file="high_beats.wav", time_file="beats.txt"): #added time_file
+    high_beats, y, sr = find_high_decibel_beats(audio_file,threshold)
 
     if high_beats and y is not None and sr is not None:
         high_beat_segments = []
@@ -58,5 +59,3 @@ def extract_and_save_high_beats(audio_file, output_file="high_beats.wav", time_f
     else:
         print("Could not extract high beats.")
 
-audio_file = "audio2.mp3"
-extract_and_save_high_beats(audio_file)
