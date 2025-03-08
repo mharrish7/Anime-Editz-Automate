@@ -76,7 +76,7 @@ def find_optimal_threshold(audio_file, image_folder):
         mid = (low + high) // 2
         extract_and_save_high_beats(audio_file, mid / 100)
         beat_count = len(open("beats.txt").read().split('\n')) - 1
-        if beat_count >= image_count:
+        if beat_count > image_count:
             best_threshold = mid
             threshold_entry.config(state=tk.NORMAL)
             threshold_entry.delete(0, tk.END)
